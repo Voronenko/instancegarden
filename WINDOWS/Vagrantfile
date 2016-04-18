@@ -1,0 +1,44 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+=begin
+ModernIE VMs
+
+config.vm.box = "modernIE/vista-ie7"
+config.vm.box = "modernIE/w7-ie8"
+config.vm.box = "modernIE/w7-ie9"
+config.vm.box = "modernIE/w7-ie10"
+config.vm.box = "modernIE/w7-ie11"
+config.vm.box = "modernIE/w8-ie10"
+config.vm.box = "modernIE/w8.1-ie11"
+config.vm.box = "modernIE/w10-edge"
+
+System Account Credentials
+Username: IEUser
+Password: Passw0rd!
+=end
+
+VAGRANTFILE_API_VERSION = "2"
+VAGRANT_NETWORK_IP = "192.168.56.200"
+
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.box = "modernIE/w10-edge"
+  config.vm.synced_folder "./public", "c:/VAGRANT"
+
+  config.vm.provider "virtualbox" do |vb|
+    vb.customize ["modifyvm", :id, "--memory", "1024"]
+    vb.customize ["modifyvm", :id, "--vram", "128"]
+    vb.customize ["modifyvm", :id,  "--cpus", "2"]
+    vb.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
+    vb.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
+    vb.customize ["guestproperty", "set", :id, "/VirtualBox/GuestAdd/VBoxService/--timesync-set-threshold", 10000]
+    vb.gui = true
+
+  end
+
+  config.vm.hostname = "w10edge.vagrant.dev"
+  config.vm.network :private_network, ip: VAGRANT_NETWORK_IP
+
+
+
+end
