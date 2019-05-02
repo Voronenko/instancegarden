@@ -1,4 +1,4 @@
-For better experience add to `/etc/sudoers.d/YOURUSER` replaceing slavko with your username
+For better experience add to `/etc/sudoers.d/YOURUSER` replacing slavko with your username
 
 ```
 #slavko ALL=(ALL) NOPASSWD: ALL
