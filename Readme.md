@@ -5,9 +5,8 @@ For better experience add to `/etc/sudoers.d/YOURUSER` replaceing slavko with yo
 
 # vagrant-hostsupdater
 Cmnd_Alias VAGRANT_HOSTS_ADD = /bin/sh -c echo "*" >> /etc/hosts
-Cmnd_Alias VAGRANT_HOSTS_ADD2 = sh -c echo "*" >> /etc/hosts
 Cmnd_Alias VAGRANT_HOSTS_REMOVE = /usr/bin/sed -i -e /*/ d /etc/hosts
-slavko ALL=(root) NOPASSWD: VAGRANT_HOSTS_ADD, VAGRANT_HOSTS_REMOVE, VAGRANT_HOSTS_ADD2
+slavko ALL=(root) NOPASSWD: VAGRANT_HOSTS_ADD, VAGRANT_HOSTS_REMOVE
 
 # vagrant-nfs
 Cmnd_Alias VAGRANT_EXPORTS_ADD = /usr/bin/tee -a /etc/exports

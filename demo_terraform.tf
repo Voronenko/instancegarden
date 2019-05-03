@@ -1,5 +1,5 @@
 resource "vagrant_vm" "my_vagrant_vm" {
-  vagrantfile_dir = "unix"
+  vagrantfile_dir = "ubuntu/trusty"
   env = {
     KEY = "value",
   }

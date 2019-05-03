@@ -1,0 +1,102 @@
+machines = {
+    :trusty => {
+        :box => 'ubuntu/trusty64',    # Ubuntu 14
+        :ip => '192.168.56.101',
+        # :share_cwd => false,        # Defaults can be overridden
+        # :install => true,
+    },
+    :xenial => {
+        :box => 'ubuntu/xenial64',    # Ubuntu 16
+        :ip => '192.168.56.102',
+    },
+    :bionic => {
+        :box => 'ubuntu/bionic64',    # Ubuntu 18
+        :ip => '192.168.56.103',
+    },
+    :wheezy => {
+        :box => 'debian/wheezy64',    # Debian 7, Needs glibc 2.17
+        :ip => '192.168.56.104',
+    },
+    :jessie => {
+        :box => 'debian/jessie64',    # Debian 8
+        :ip => '192.168.56.105',
+    },
+    :stretch => {
+        :box => 'debian/stretch64',   # Debian 9
+        :ip => '192.168.56.106',
+    },
+    :centos6 => {
+        :box => 'centos/6',
+        :ip => '192.168.56.110',
+    },
+    :centos7 => {
+        :box => 'centos/7',
+        :ip => '192.168.56.111',
+    },
+    :rhel7 => {
+        :box => 'generic/rhel7',
+        :ip => '192.168.56.112',
+    },
+    :fedora28 => {
+        :box => 'generic/fedora28',
+        :ip => '192.168.56.113',
+    },
+    :win16 => {
+        :box => 'mwrock/Windows2016',
+        :ip => '192.168.56.120',
+    },
+    :win12 => {
+        :box => 'mwrock/Windows2012R2',
+        :ip => '192.168.56.121',
+    },
+}
+
+Vagrant.configure("2") do |config|
+  machines.each do |hostname, properties|
+
+    config.vm.define hostname do |box|
+      box.vm.box = properties[:box]
+      box.vm.hostname = hostname
+      box.vm.box_url = properties[:box]
+      # box.vm.box_version = ""
+
+      box.vm.network :private_network, ip: properties[:ip]
+
+      # Does not share . by default unless :share_cwd => true
+      box.vm.synced_folder '.', '/vagrant', disabled: !properties[:share_cwd]
+
+      if !properties.key?(:install) or properties[:install]
+
+        if !"#{hostname}".start_with?("win")
+          box.vm.provision "shell",
+                           env: {
+                               :SOMEENV => "SOMEVALUE",
+                           },
+                           path: "someprovisioner.sh",
+                           privileged: false
+        else
+          $script = <<-SCRIPT
+          Import-Module c:\\some_install_script.ps1
+          install
+          SCRIPT
+
+          box.vm.provision "shell",
+                           env: {
+                               :SOMEENV => "SOMEVALUE",
+                           },
+                           inline: $script,
+                           privileged: true
+        end
+
+      end
+
+      box.vm.provider :virtualbox do |v|
+        v.memory = 4096
+        v.cpus = 2
+        # v.memory = 16384
+        # v.cpus = 4
+      end
+    end
+
+  end
+end
