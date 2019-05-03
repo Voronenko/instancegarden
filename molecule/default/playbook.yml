@@ -1,0 +1,79 @@
+---
+- name: Converge
+  gather_facts: False
+  hosts: all
+  vars:
+    - box_provider: molecule
+    - env: molecule
+
+  pre_tasks:
+    - debug: msg="Pre tasks section"
+      tags: always
+
+    - name: ANSIBLE PYTHON | install python 2
+      raw: test -e /usr/bin/python || (apt -qqy update && apt install -qy python-minimal)
+      become: yes
+      tags: always
+
+    - name:  UNPRIVILEGED USERS | Get acl dependency (ansible unprivileged user operations magic)
+      apt: pkg="acl"
+      become: yes
+      tags: always
+
+    - name: gather facts
+      setup:
+      tags: always
+
+  roles:
+
+    - {
+        role: "sa_box_bootstrap",
+        deploy_user: "deploy",
+#        deploy_user_key: "{{playbook_dir}}/components/files/ssh/jenkins_rsa",
+#        deploy_user_pub_key: "{{playbook_dir}}/components/files/ssh/jenkins_rsa.pub",
+        deploy_user_authorized_keys: ["~/.ssh/id_rsa.pub"],
+        timezone: "Europe/Kiev",
+        hostname: "vagrantish",
+        option_copy_initial_authorized_keys: false,
+        option_enforce_ssh_keys_login: false,
+        option_file2ban: false,
+        option_firewall: false,
+        option_monit: false
+      }
+
+    - {
+      role: "sa_git"
+      }
+    - {
+      role: "sa_php_fpm",
+      option_install_xdebug: false,
+      php_fpm_user: www-data,
+      php_fpm_group: www-data,
+
+      php_fpm_listen: sock, # tcp 9000 to support. and both
+      php_family: 7.2
+      }
+    - {
+      role: "sa_mysql",
+      }
+    - {
+       role: "rvm_ruby",
+       rvm1_rubies: ['ruby-2.5.1'],
+       rvm1_install_flags: '--auto-dotfiles',     # Remove --user-install from defaults
+       rvm1_install_path: /usr/local/rvm,         # Set to system location
+       rvm1_user: root,                           # Need root account to access system location
+       become: yes
+      }
+    - {
+      role: "sa_python",
+      }
+    - {
+        role: "sa_node_nvm",
+        nvm_version: "0.31.1",
+        deploy_user: "wordpresser",
+        option_nodejs_install_with_nvm: true,
+        nodejs_version: "6.9.2",
+        option_integrate_w_bash: true,
+        option_integrate_w_zsh: true
+      }
+
