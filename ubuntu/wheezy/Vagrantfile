@@ -26,7 +26,7 @@ Vagrant.configure("2") do |config|
                            env: {
                                :SOMEENV => "SOMEVALUE",
                            },
-                           path: "someprovisioner.sh",
+                           path: "scripts/vagrant_init_debian.sh",
                            privileged: false
         else
           $script = <<-SCRIPT

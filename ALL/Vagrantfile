@@ -1,3 +1,5 @@
+# Please, keep ip synchronized to individual snippets.
+# Demonstrates orchestration for several boxes
 machines = {
     :trusty => {
         :box => 'ubuntu/trusty64',    # Ubuntu 14
@@ -72,7 +74,7 @@ Vagrant.configure("2") do |config|
                            env: {
                                :SOMEENV => "SOMEVALUE",
                            },
-                           path: "someprovisioner.sh",
+                           path: "scripts/vagrant_init_debian.sh",
                            privileged: false
         else
           $script = <<-SCRIPT
