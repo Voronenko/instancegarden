@@ -1,4 +1,5 @@
 .terraform
+terraform.d
 */.vagrant
 *.tfstate*
 */**/.vagrant
