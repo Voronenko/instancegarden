@@ -2,12 +2,20 @@
 
 users:
   - default
+  - name: centos
+    passwd: $1$slavko$mhTAXUOoJfrnQeSlO2AVR.
+    ssh_pwauth: True
+    chpasswd: { expire: False }
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, wheel
+    ssh_authorized_keys:
+      - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCzT2CJoS/GjsHxa4cWxoaVKkvGL+angx2jYlR62t4/pHZ8JNS2Q+Ptb+YL5UHiwOV74sOUn0PrKDDGoc+BSUTHX6E28Vz1YfRUrL6lLJ/JRg3ZIARXSuOdF87/FakGc83wi3YV7oFb7EtQObrDmIj01XPLATaGsfeK/0sywFgAmIDnIUWVn/asc+ijON0VCmbiXkcbb7/S+MIIOr08FtpJ6u8bJVwGCOdxn2GdcJ4Wu2TZRq20DmNWDu1iNj3JY5ADMC7rOL2F+mfuT8QjQyAX5nMJCp4ere0JdLUznZiiUZacu7vpqh9lLgxIgK1PFZwm6RiM2/s5PvPHLNJTrNLB std@nb
   - name: slavko
     passwd: $1$slavko$mhTAXUOoJfrnQeSlO2AVR.
     ssh_pwauth: True
     chpasswd: { expire: False }
     sudo: ALL=(ALL) NOPASSWD:ALL
-    groups: users
+    groups: users, wheel
     ssh_authorized_keys:
       - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCzT2CJoS/GjsHxa4cWxoaVKkvGL+angx2jYlR62t4/pHZ8JNS2Q+Ptb+YL5UHiwOV74sOUn0PrKDDGoc+BSUTHX6E28Vz1YfRUrL6lLJ/JRg3ZIARXSuOdF87/FakGc83wi3YV7oFb7EtQObrDmIj01XPLATaGsfeK/0sywFgAmIDnIUWVn/asc+ijON0VCmbiXkcbb7/S+MIIOr08FtpJ6u8bJVwGCOdxn2GdcJ4Wu2TZRq20DmNWDu1iNj3JY5ADMC7rOL2F+mfuT8QjQyAX5nMJCp4ere0JdLUznZiiUZacu7vpqh9lLgxIgK1PFZwm6RiM2/s5PvPHLNJTrNLB std@nb
 
@@ -40,8 +48,10 @@ ntp:
 runcmd:
     - date > /tmp/cloudinit.log
     - whoami >> /tmp/cloudinit.log
-    - curl -L http://bit.ly/voronenko | bash -s
-    - sudo dhclient ens36
-    - sudo hostnamectl set-hostname ${HOSTNAME}
-    - sudo echo ${HELLO} >> /tmp/cloudinit.log
+#    - curl -L http://bit.ly/voronenko | bash -s
+#    - sudo dhclient ens36
+#    - sudo hostnamectl set-hostname ${HOSTNAME}
+#    - sudo echo ${HELLO} >> /tmp/cloudinit.log
+#   centos specific workaround for bug in vmware cloud-init
+    - sudo pam-auth-update
     - sudo echo "Done tf cloud-init" >>/tmp/cloudinit.log

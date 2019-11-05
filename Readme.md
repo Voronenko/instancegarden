@@ -21,3 +21,65 @@ slavko ALL=(ALL) NOPASSWD: /etc/init.d/nginx, /etc/init.d/mysql, /etc/init.d/mon
 slavko ALL=(ALL) NOPASSWD:SETENV: /usr/bin/docker, /usr/sbin/docker-gc, /usr/bin/vagrant
 
 ```
+
+
+# cloud-init perks
+
+Password can be created with
+
+```
+openssl passwd -1 -salt SaltSalt secret
+```
+
+example
+
+```
+openssl passwd -1 -salt slavko Passw0rd1
+$1$slavko$mhTAXUOoJfrnQeSlO2AVR.
+```
+
+# ESXi notes
+
+For ESXi following cloud-init package needs to be installed
+
+https://github.com/vmware/cloud-init-vmware-guestinfo
+
+## Dealing with naked centos-es
+
+Check adapters
+
+```
+nmcli d
+```
+
+if exist, type “nmtui” command in your terminal to open Network manager. After opening Network manager chose “Edit connection” 
+
+
+After activated,  use 
+```
+ip a
+```
+
+to validate, that address was really assigned.
+
+If you are going to use that image as further ESXi template,
+consider installing vmware cloud init 
+
+```
+curl -L -O ./cloudinit.rpm https://bit.ly/esxi-cloud-init
+yum install ./cloudinit.rpm
+```
+
+target machine can be exported as ova template using
+
+```
+ovftool vi://$GOVC_USERNAME:$GOVC_PASSWORD@$GOVC_URL/VMNAME ./
+```
+
+target output can be packed into OVA image using 
+
+```
+tar -cvf centos7.ova *.ovf *.vmdk *.nvram *.mf
+```
+
+Note: order ovf, vmdk, nvram mf might be important
