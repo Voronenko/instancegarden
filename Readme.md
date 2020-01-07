@@ -83,3 +83,14 @@ tar -cvf centos7.ova *.ovf *.vmdk *.nvram *.mf
 ```
 
 Note: order ovf, vmdk, nvram mf might be important
+
+## ESXi terraform-provider-esxi plugin
+
+I am using patched version of the great terraform-provider-esxi by https://github.com/josenk/terraform-provider-esxi
+My original PR was slightly modified by author, and in a current master solution does not work (at least for me)
+
+I have that in a backlog, but until that I am sticking to my version 1.5.4bis
+
+https://github.com/Voronenko/terraform-provider-esxi/tree/1.5.4.bis 
+
+which works nicely on my HomeLab environment
