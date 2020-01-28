@@ -27,7 +27,7 @@ resource "esxi_guest" "vmtest" {
   boot_disk_size     = "30" # Optional - Specify boot disk size or grow cloned vm to this size.
   memsize            = "4096" # Optional - Memory size in MB. (ie, 1024 == 1GB). See esxi documentation for limits. - Default 512 or default taken from cloned source
   numvcpus           = "1" # Optional - Number of virtual cpus. See esxi documentation for limits. - Default 1 or default taken from cloned source.
-  virthwver          = "8" #  Optional - esxi guest virtual HW version. See esxi documentation for compatible values. - Default 8 or taken from cloned source.
+  virthwver          = "14" #  Optional - esxi guest virtual HW version. See esxi documentation for compatible values. - Default 8 or taken from cloned source.
   power              = "on" # Optional - on, off.
   guest_startup_timeout = "90"
 
