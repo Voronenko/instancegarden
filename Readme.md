@@ -94,3 +94,25 @@ I have that in a backlog, but until that I am sticking to my version 1.5.4bis
 https://github.com/Voronenko/terraform-provider-esxi/tree/1.5.4.bis 
 
 which works nicely on my HomeLab environment
+
+
+## ESXi and windows
+
+Unless `ovftool --hideEula YourWindows.ova` shows you some useful properties for auto provisioning,
+you will need to configure your virtual windows for provisioning manually
+
+```powershell
+# VMWare tools
+choco install vmware-tools
+
+# WinFiles
+Set-ExecutionPolicy Bypass -Scope Process -Force; 
+iex ((New-Object System.Net.WebClient).DownloadString('https://bit.ly/winfiles'))
+
+# Ansible Remoting
+Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://bit.ly/ansible_remoting'))
+
+# Optional, enable remote desktop if it is disabled for some reason
+Set-ItemProperty -Path 'HKLM:SystemCurrentControlSetControlTerminal Server'-name "fDenyTSConnections" -Value 0
+Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+```
