@@ -116,3 +116,22 @@ Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.We
 Set-ItemProperty -Path 'HKLM:SystemCurrentControlSetControlTerminal Server'-name "fDenyTSConnections" -Value 0
 Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
 ```
+
+
+# Inconsistent vms
+
+
+Connect to the ESXi host using SSH client (Putty, mputty, etc.);
+
+To get the ID of the problem virtual machine, run this command: 
+
+```
+vim-cmd vmsvc/getallvms | grep invalid
+```
+
+A list of all VMs with the Invalid status registered on this host will be displayed. 
+There should be a string like: Skipping invalid VM '22'. In this case, 22 is the ID of the virtual machine;
+
+If you want to try and restore this VM in vSphere, run the command: vim-cmd vmsvc/reload 22 (in a minute refresh the client interface and check the VM status);
+
+If you want to unregister (delete) a problem virtual machine, run the following command: vim-cmd /vmsvc/unregister 22
