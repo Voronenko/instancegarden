@@ -22,6 +22,7 @@ Vagrant.configure("2") do |config|
       box.vm.provision "shell", privileged: "true", inline: <<-SHELL
        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
        Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+       choco feature enable -n allowGlobalConfirmation
        Set-TimeZone 'Eastern Standard Time'
       SHELL
 
