@@ -135,3 +135,26 @@ There should be a string like: Skipping invalid VM '22'. In this case, 22 is the
 If you want to try and restore this VM in vSphere, run the command: vim-cmd vmsvc/reload 22 (in a minute refresh the client interface and check the VM status);
 
 If you want to unregister (delete) a problem virtual machine, run the following command: vim-cmd /vmsvc/unregister 22
+
+
+# Trusted vms
+
+
+Allow logging in with your current key
+
+```
+    config.vm.provision "shell" do |s|
+      ssh_pub_key = File.readlines("#{Dir.home}/.ssh/id_rsa.pub").first.strip
+      s.inline = <<-SHELL
+        echo #{ssh_pub_key} >> /home/vagrant/.ssh/authorized_keys
+        echo #{ssh_pub_key} >> /root/.ssh/authorized_keys
+      SHELL
+    end
+```
+
+Inject your own key into vm
+
+```
+config.vm.provision "file", source: "#{Dir.home}/.ssh/id_rsa", destination: "/home/vagrant/.ssh/id_rsa"
+```
+
