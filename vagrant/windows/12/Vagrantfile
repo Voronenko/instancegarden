@@ -19,21 +19,21 @@ Vagrant.configure("2") do |config|
       # Does not share . by default unless :share_cwd => true
       box.vm.synced_folder '.', '/vagrant', disabled: !properties[:share_cwd]
 
-      box.vm.provision "shell", privileged: "true", powershell_elevated_interactive: "true", inline: <<-SHELL
+      box.vm.provision "shell", privileged: "true", inline: <<-SHELL
        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
        Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
        Set-TimeZone 'Eastern Standard Time'
       SHELL
 
       # Ansible remoting
-      box.vm.provision "shell", privileged: "true", powershell_elevated_interactive: "true", inline: <<-SHELL
+      box.vm.provision "shell", privileged: "true", inline: <<-SHELL
        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
        Set-ExecutionPolicy Bypass -Scope Process -Force;
        iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/Voronenko/winfiles/master/setup/ConfigureRemotingForAnsible.ps1'))
       SHELL
 
       # Linux shell
-      box.vm.provision "shell", privileged: "true", powershell_elevated_interactive: "true", inline: <<-SHELL
+      box.vm.provision "shell", privileged: "true", inline: <<-SHELL
        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
        Set-ExecutionPolicy Bypass -Scope Process -Force;
        iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/Voronenko/winfiles/master/setup/GetPowershell6LinuxRemoting.ps1'))
