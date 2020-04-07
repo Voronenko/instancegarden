@@ -158,3 +158,29 @@ Inject your own key into vm
 config.vm.provision "file", source: "#{Dir.home}/.ssh/id_rsa", destination: "/home/vagrant/.ssh/id_rsa"
 ```
 
+
+## Enabling keyboard between ESXi remote console and  host
+
+Enable content Copy/Paste between VMRC client and Windows/Linux Virtual Machine (57122)
+https://kb.vmware.com/s/article/57122
+
+Install or upgrade the VMware tools for the Windows/Linux virtual machine(VM). For more information see Installing and upgrading VMware Tools in vSphere.
+
+Power off the VM.
+
+Goto  Edit Settings => Advanced => Edit Configuration
+Specify
+
+```
+Name:                                 Value:
+isolation.tools.copy.disable          FALSE
+isolation.tools.paste.disable         FALSE
+isolation.tools.setGUIOptions.enable  TRUE
+```
+ 
+​These options override any settings made in the guest operating system’s VMware Tools control panel
+ 
+Then use Copy/Paste directly on Windows/Linux/any other platform. 
+For paste operation's target platform is Linux, Older X applications do not use a clipboard. Instead, they let you paste the currently selected text (called the "primary selection") without copying it to a clipboard. Pressing the middle mouse button is usually the way to paste the primary selection. For more information see Copying and pasting from a Windows guest to Linux host.
+
+NOTE: This Steps provided in the kb helps you to copy the data not file/folder. This is per VM level configuration.
