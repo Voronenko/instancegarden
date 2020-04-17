@@ -1,0 +1,80 @@
+- hosts: all
+
+  vars_files:
+    - builder_vars.yml
+
+  tasks:
+
+    - name: Install conemu
+      win_chocolatey:
+        name: conemu
+        state: present
+
+    - name: Install sysinternals
+      win_chocolatey:
+        name: sysinternals
+        state: present
+
+    - name: Install dotnetcore-sdk
+      win_chocolatey:
+        name: dotnetcore-sdk
+        state: present
+
+    - name: Install netfx-4.5.2-devpack
+      win_chocolatey:
+        name: netfx-4.5.2-devpack
+        state: present
+
+    - name: Install nuget.commandline
+      win_chocolatey:
+        name: nuget.commandline
+        state: present
+
+    - name: Install visualstudio2019community
+      win_chocolatey:
+        name: visualstudio2019community
+        state: present
+
+ # Workloads
+ #Desktop development with C++
+
+    - name: Install visualstudio2019-workload-manageddesktop
+      win_chocolatey:
+        name: visualstudio2019-workload-manageddesktop
+        state: present
+
+ # .NET desktop development
+    - name: Install visualstudio2019-workload-nativedesktop
+      win_chocolatey:
+        name: visualstudio2019-workload-nativedesktop
+        state: present
+
+ #.NET Core cross-platform development
+    - name: Install visualstudio2019-workload-netcoretools
+      win_chocolatey:
+        name: visualstudio2019-workload-netcoretools
+        state: present
+
+ # Optional: ASP.NET and web development
+ #.NET Core cross-platform development
+    - name: Install visualstudio2019-workload-netweb
+      win_chocolatey:
+        name: visualstudio2019-workload-netweb
+        state: present
+
+# Native cross platform
+    - name: Install visualstudio2019-workload-nativecrossplat
+      win_chocolatey:
+        name: visualstudio2019-workload-nativecrossplat
+        state: present
+
+# vctools
+    - name: Install visualstudio2019-workload-vctools
+      win_chocolatey:
+        name: visualstudio2019-workload-vctools
+        state: present
+
+    - name: Install netfx-4.7-devpack
+      win_chocolatey:
+        name: netfx-4.7-devpack
+        state: present

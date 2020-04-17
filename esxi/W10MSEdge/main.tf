@@ -24,8 +24,8 @@ resource "esxi_guest" "vmtest" {
   notes              = "ProjectX"  # Optional - The Guest notes (annotation).
   disk_store         = var.disk_store # Required - esxi Disk Store where guest vm will be created
   boot_disk_type     = "thin" # Optional - Guest boot disk type. Default 'thin'. Available thin, zeroedthick, eagerzeroedthick
-  boot_disk_size     = "30" # Optional - Specify boot disk size or grow cloned vm to this size.
-  memsize            = "4096" # Optional - Memory size in MB. (ie, 1024 == 1GB). See esxi documentation for limits. - Default 512 or default taken from cloned source
+  boot_disk_size     = "80" # Optional - Specify boot disk size or grow cloned vm to this size.
+  memsize            = "8192" # Optional - Memory size in MB. (ie, 1024 == 1GB). See esxi documentation for limits. - Default 512 or default taken from cloned source
   numvcpus           = "1" # Optional - Number of virtual cpus. See esxi documentation for limits. - Default 1 or default taken from cloned source.
   virthwver          = "14" #  Optional - esxi guest virtual HW version. See esxi documentation for compatible values. - Default 8 or taken from cloned source.
   power              = "on" # Optional - on, off.

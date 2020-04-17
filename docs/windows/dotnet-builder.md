@@ -9,7 +9,7 @@ choco list dotnetcore --version=2.1
  choco install -y netfx-4.5.2-devpack
  choco install -y nuget.commandline
 
- choco install -y visualstudio2019community 
+ choco install -y visualstudio2019community
 
  # Workloads
  #Desktop development with C++

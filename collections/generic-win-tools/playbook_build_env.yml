@@ -1,0 +1,33 @@
+- hosts: all
+
+  vars_files:
+    - builder_vars.yml
+
+  tasks:
+
+    - name: Install conemu
+      win_chocolatey:
+        name: conemu
+        state: present
+
+    - name: Install sysinternals
+      win_chocolatey:
+        name: sysinternals
+        state: present
+
+    - name: Install 7zip
+      win_chocolatey:
+        name: 7zip.install
+        state: present
+
+    - name: Install far
+      win_chocolatey:
+        name: far
+        state: present
+
+    - name: Install vscode
+      win_chocolatey:
+        name: vscode
+        state: present
+
+
