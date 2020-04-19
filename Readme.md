@@ -40,6 +40,8 @@ $1$slavko$mhTAXUOoJfrnQeSlO2AVR.
 
 # ESXi notes
 
+esxcli:   https://my.vmware.com/group/vmware/get-download?downloadGroup=ESXCLI-67U2
+
 For ESXi following cloud-init package needs to be installed
 
 https://github.com/vmware/cloud-init-vmware-guestinfo
