@@ -1,3 +1,19 @@
+## Vagrant boxes matrix
+
+| OS  | IP  | Hostupdater alias  |   |
+|---|---|---|---|
+| ubuntu/bionic | 192.168.55.103  | bionic.vagrant.voronenko.net |
+|   |   |   |   |
+|   |   |   |   |
+|   |   |   |   |
+|   |   |   |   |
+|   |   |   |   |
+|   |   |   |   |
+|   |   |   |   |
+|   |   |   |   |
+
+
+
 For better experience add to `/etc/sudoers.d/YOURUSER` replacing slavko with your username
 
 ```

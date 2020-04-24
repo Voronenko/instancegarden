@@ -1,0 +1,24 @@
+#!/bin/bash
+
+WORKSPACE=$(
+  cd $(dirname "$0")
+  pwd
+)
+
+os=${1:-bionic}
+platform=${2:-vagrant}
+
+if [ "$platform" = "vagrant" ]; then
+
+echo $os on $platform
+
+case "$os" in
+    bionic)
+        cd $WORKSPACE/vagrant/ubuntu/bionic
+        vagrant up
+        ;;
+    *)
+       echo "Add support in igarden_cli"
+esac
+
+fi

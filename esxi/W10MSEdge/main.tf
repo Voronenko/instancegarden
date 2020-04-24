@@ -19,7 +19,7 @@ data "template_file" "userdata_default" {
 
 resource "esxi_guest" "vmtest" {
   # guest_name - Required - The Guest name.
-  guest_name         = "vmtest"
+  guest_name         = var.guest_name
   # guestos  # Optional - Default will be taken from cloned source
   notes              = "ProjectX"  # Optional - The Guest notes (annotation).
   disk_store         = var.disk_store # Required - esxi Disk Store where guest vm will be created

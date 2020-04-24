@@ -37,3 +37,8 @@ variable "vm_ovf_local_path" {
 variable "vm_hostname" {
   default = "vmwindows"
 }
+
+variable "guest_name" {
+  default = "freshw10"
+}
+

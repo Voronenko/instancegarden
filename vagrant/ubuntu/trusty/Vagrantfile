@@ -1,7 +1,7 @@
 machines = {
     :trusty => {
         :box => 'ubuntu/trusty64',    # Ubuntu 14
-        :ip => '192.168.56.101',
+        :ip => '192.168.55.101',
         # :share_cwd => false,        # Defaults can be overridden
         # :install => true,
     }
