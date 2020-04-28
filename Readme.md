@@ -213,3 +213,7 @@ Netplwiz
 ```
 
 and uncheck button "require username and password".  In that scenario in your home garden you get additional 15-20 secs to start working with lab instance.
+
+If you have sysinternals installed, there os also sysinternals utility
+
+https://docs.microsoft.com/en-us/sysinternals/downloads/autologon
