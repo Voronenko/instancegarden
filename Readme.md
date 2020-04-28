@@ -202,3 +202,14 @@ Then use Copy/Paste directly on Windows/Linux/any other platform.
 For paste operation's target platform is Linux, Older X applications do not use a clipboard. Instead, they let you paste the currently selected text (called the "primary selection") without copying it to a clipboard. Pressing the middle mouse button is usually the way to paste the primary selection. For more information see Copying and pasting from a Windows guest to Linux host.
 
 NOTE: This Steps provided in the kb helps you to copy the data not file/folder. This is per VM level configuration.
+
+
+## Autologin for windows dummy boxes
+
+Assuming your image has pin,fingerprint login not activated, you can use
+
+```sh
+Netplwiz
+```
+
+and uncheck button "require username and password".  In that scenario in your home garden you get additional 15-20 secs to start working with lab instance.
