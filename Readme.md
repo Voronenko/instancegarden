@@ -217,3 +217,14 @@ and uncheck button "require username and password".  In that scenario in your ho
 If you have sysinternals installed, there os also sysinternals utility
 
 https://docs.microsoft.com/en-us/sysinternals/downloads/autologon
+
+## Working in ESXi using vmrc
+
+In my scenario I was constantly getting keyboard in misconfigured state on return from client, which forced me
+to put a custom shortcut running
+
+```
+setxkbmap
+```
+
+which resets keyboard to a proper state
