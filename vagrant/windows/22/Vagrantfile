@@ -1,0 +1,109 @@
+machines = {
+    :win22 => {
+        :box => 'gusztavvargadr/windows-server',
+        :ip => '192.168.56.122',
+    },
+}
+
+Vagrant.configure("2") do |config|
+  machines.each do |hostname, properties|
+
+    config.vm.define hostname do |box|
+      box.vm.box = properties[:box]
+      box.vm.hostname = hostname
+      box.vm.box_url = properties[:box]
+      # box.vm.box_version = ""
+
+      box.vm.network :private_network, ip: properties[:ip]
+
+      # Does not share . by default unless :share_cwd => true
+      box.vm.synced_folder '.', '/vagrant', disabled: !properties[:share_cwd]
+
+      if !properties.key?(:install) or properties[:install]
+
+        if !"#{hostname}".start_with?("win")
+          box.vm.provision "shell",
+                           env: {
+                               :SOMEENV => "SOMEVALUE",
+                           },
+                           path: "scripts/vagrant_init_debian.sh",
+                           privileged: false
+        else
+          $script = <<-SCRIPT
+          # Import-Module c:\\some_install_script.ps1
+          # install
+
+          function Verify-Elevated {
+              # Get the ID and security principal of the current user account
+              $myIdentity=[System.Security.Principal.WindowsIdentity]::GetCurrent()
+              $myPrincipal=new-object System.Security.Principal.WindowsPrincipal($myIdentity)
+              # Check to see if we are currently running "as Administrator"
+              return $myPrincipal.IsInRole([System.Security.Principal.WindowsBuiltInRole]::Administrator)
+          }
+
+          function Refresh-Environment {
+              $locations = 'HKLM:\\SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment',
+                          'HKCU:\\Environment'
+
+              $locations | ForEach-Object {
+                  $k = Get-Item $_
+                  $k.GetValueNames() | ForEach-Object {
+                      $name  = $_
+                      $value = $k.GetValue($_)
+                      Set-Item -Path Env:\$name -Value $value
+                  }
+              }
+
+              $env:Path = [System.Environment]::GetEnvironmentVariable("Path","Machine") + ";" + [System.Environment]::GetEnvironmentVariable("Path","User")
+          }
+
+          if (!(Verify-Elevated)) {
+            $newProcess = new-object System.Diagnostics.ProcessStartInfo "PowerShell";
+            $newProcess.Arguments = $myInvocation.MyCommand.Definition;
+            $newProcess.Verb = "runas";
+            [System.Diagnostics.Process]::Start($newProcess);
+
+            exit
+          }
+
+          iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+
+          Write-Host "Refreshing environment" -ForegroundColor "Yellow"
+
+          Refresh-Environment
+
+          choco feature enable -n=allowGlobalConfirmation
+
+          Write-Host "Choco installing main components" -ForegroundColor "Yellow"
+
+          choco install git
+
+          choco install jq
+
+          choco install far
+
+          choco install conemu
+
+          Get-NetIPAddress -AddressFamily IPV4
+          SCRIPT
+
+          box.vm.provision "shell",
+                           env: {
+                               :SOMEENV => "SOMEVALUE",
+                           },
+                           inline: $script,
+                           privileged: true
+        end
+
+      end
+
+      box.vm.provider :virtualbox do |v|
+        v.memory = 4096
+        v.cpus = 2
+        # v.memory = 16384
+        # v.cpus = 4
+      end
+    end
+
+  end
+end
