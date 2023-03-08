@@ -6,3 +6,5 @@ terraform.d
 */**/.vagrant
 terraform.tfstate
 terraform.tfstate.backup
+.venv
+*.log

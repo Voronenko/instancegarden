@@ -1,7 +1,7 @@
 machines = {
     :stretch => {
         :box => 'debian/stretch64',   # Debian 9
-        :ip => '192.168.56.106',
+        :ip => '192.168.55.106',
     }
 }
 

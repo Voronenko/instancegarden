@@ -1,7 +1,7 @@
 machines = {
     :xenial => {
         :box => 'ubuntu/xenial64',    # Ubuntu 16
-        :ip => '192.168.56.102',
+        :ip => '192.168.55.102',
     }
 }
 

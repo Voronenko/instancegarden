@@ -1,3 +1,19 @@
+## Vagrant boxes matrix
+
+| OS  | IP  | Hostupdater alias  |   |
+|---|---|---|---|
+| ubuntu/bionic | 192.168.55.103  | bionic.vagrant.voronenko.net |
+|   |   |   |   |
+|   |   |   |   |
+|   |   |   |   |
+|   |   |   |   |
+|   |   |   |   |
+|   |   |   |   |
+|   |   |   |   |
+|   |   |   |   |
+
+
+
 For better experience add to `/etc/sudoers.d/YOURUSER` replacing slavko with your username
 
 ```
@@ -39,6 +55,8 @@ $1$slavko$mhTAXUOoJfrnQeSlO2AVR.
 ```
 
 # ESXi notes
+
+esxcli:   https://my.vmware.com/group/vmware/get-download?downloadGroup=ESXCLI-67U2
 
 For ESXi following cloud-init package needs to be installed
 
@@ -94,3 +112,119 @@ I have that in a backlog, but until that I am sticking to my version 1.5.4bis
 https://github.com/Voronenko/terraform-provider-esxi/tree/1.5.4.bis 
 
 which works nicely on my HomeLab environment
+
+
+## ESXi and windows
+
+Unless `ovftool --hideEula YourWindows.ova` shows you some useful properties for auto provisioning,
+you will need to configure your virtual windows for provisioning manually
+
+```powershell
+# VMWare tools
+choco install vmware-tools
+
+# WinFiles
+Set-ExecutionPolicy Bypass -Scope Process -Force; 
+iex ((New-Object System.Net.WebClient).DownloadString('https://bit.ly/winfiles'))
+
+# Ansible Remoting
+Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://bit.ly/ansible_remoting'))
+
+# Optional, enable remote desktop if it is disabled for some reason
+Set-ItemProperty -Path 'HKLM:SystemCurrentControlSetControlTerminal Server'-name "fDenyTSConnections" -Value 0
+Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+```
+
+
+# Inconsistent vms
+
+
+Connect to the ESXi host using SSH client (Putty, mputty, etc.);
+
+To get the ID of the problem virtual machine, run this command: 
+
+```
+vim-cmd vmsvc/getallvms | grep invalid
+```
+
+A list of all VMs with the Invalid status registered on this host will be displayed. 
+There should be a string like: Skipping invalid VM '22'. In this case, 22 is the ID of the virtual machine;
+
+If you want to try and restore this VM in vSphere, run the command: vim-cmd vmsvc/reload 22 (in a minute refresh the client interface and check the VM status);
+
+If you want to unregister (delete) a problem virtual machine, run the following command: vim-cmd /vmsvc/unregister 22
+
+
+# Trusted vms
+
+
+Allow logging in with your current key
+
+```
+    config.vm.provision "shell" do |s|
+      ssh_pub_key = File.readlines("#{Dir.home}/.ssh/id_rsa.pub").first.strip
+      s.inline = <<-SHELL
+        echo #{ssh_pub_key} >> /home/vagrant/.ssh/authorized_keys
+        echo #{ssh_pub_key} >> /root/.ssh/authorized_keys
+      SHELL
+    end
+```
+
+Inject your own key into vm
+
+```
+config.vm.provision "file", source: "#{Dir.home}/.ssh/id_rsa", destination: "/home/vagrant/.ssh/id_rsa"
+```
+
+
+## Enabling keyboard between ESXi remote console and  host
+
+Enable content Copy/Paste between VMRC client and Windows/Linux Virtual Machine (57122)
+https://kb.vmware.com/s/article/57122
+
+Install or upgrade the VMware tools for the Windows/Linux virtual machine(VM). For more information see Installing and upgrading VMware Tools in vSphere.
+
+Power off the VM.
+
+Goto  Edit Settings => Advanced => Edit Configuration
+Specify
+
+```
+Name:                                 Value:
+isolation.tools.copy.disable          FALSE
+isolation.tools.paste.disable         FALSE
+isolation.tools.setGUIOptions.enable  TRUE
+```
+ 
+​These options override any settings made in the guest operating system’s VMware Tools control panel
+ 
+Then use Copy/Paste directly on Windows/Linux/any other platform. 
+For paste operation's target platform is Linux, Older X applications do not use a clipboard. Instead, they let you paste the currently selected text (called the "primary selection") without copying it to a clipboard. Pressing the middle mouse button is usually the way to paste the primary selection. For more information see Copying and pasting from a Windows guest to Linux host.
+
+NOTE: This Steps provided in the kb helps you to copy the data not file/folder. This is per VM level configuration.
+
+
+## Autologin for windows dummy boxes
+
+Assuming your image has pin,fingerprint login not activated, you can use
+
+```sh
+Netplwiz
+```
+
+and uncheck button "require username and password".  In that scenario in your home garden you get additional 15-20 secs to start working with lab instance.
+
+If you have sysinternals installed, there os also sysinternals utility
+
+https://docs.microsoft.com/en-us/sysinternals/downloads/autologon
+
+## Working in ESXi using vmrc
+
+In my scenario I was constantly getting keyboard in misconfigured state on return from client, which forced me
+to put a custom shortcut running
+
+```
+setxkbmap
+```
+
+which resets keyboard to a proper state

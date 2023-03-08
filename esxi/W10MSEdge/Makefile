@@ -4,3 +4,9 @@ init:
 	chmod +x ./terraform.d/plugins/linux_amd64/terraform-provider-esxi
 	terraform init
 
+ovf-inspect:
+	ovftool --hideEula /home/slavko/personal/ESXI/W10MSEdge/W10MSEdge.ova
+
+check:
+	ansible windows -i hosts -m win_ping
+

@@ -19,30 +19,52 @@ Vagrant.configure("2") do |config|
       # Does not share . by default unless :share_cwd => true
       box.vm.synced_folder '.', '/vagrant', disabled: !properties[:share_cwd]
 
-      if !properties.key?(:install) or properties[:install]
+      box.vm.provision "shell", privileged: "true", inline: <<-SHELL
+       [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+       Set-ExecutionPolicy Bypass -Scope Process -Force; iex ((New-Object System.Net.WebClient).DownloadString('https://chocolatey.org/install.ps1'))
+       choco feature enable -n allowGlobalConfirmation
+       Set-TimeZone 'Eastern Standard Time'
+      SHELL
 
-        if !"#{hostname}".start_with?("win")
-          box.vm.provision "shell",
-                           env: {
-                               :SOMEENV => "SOMEVALUE",
-                           },
-                           path: "scripts/vagrant_init_debian.sh",
-                           privileged: false
-        else
-          $script = <<-SCRIPT
-          Import-Module c:\\some_install_script.ps1
-          install
-          SCRIPT
+      # Ansible remoting
+      box.vm.provision "shell", privileged: "true", inline: <<-SHELL
+       [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+       Set-ExecutionPolicy Bypass -Scope Process -Force;
+       iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/Voronenko/winfiles/master/setup/ConfigureRemotingForAnsible.ps1'))
+      SHELL
 
-          box.vm.provision "shell",
-                           env: {
-                               :SOMEENV => "SOMEVALUE",
-                           },
-                           inline: $script,
-                           privileged: true
-        end
+      # Linux shell
+      box.vm.provision "shell", privileged: "true", inline: <<-SHELL
+       [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+       Set-ExecutionPolicy Bypass -Scope Process -Force;
+       iex ((New-Object System.Net.WebClient).DownloadString('https://raw.githubusercontent.com/Voronenko/winfiles/master/setup/GetPowershell6LinuxRemoting.ps1'))
+      SHELL
 
-      end
+
+#      if !properties.key?(:install) or properties[:install]
+#
+#        if !"#{hostname}".start_with?("win")
+#          box.vm.provision "shell",
+#                           env: {
+#                               :SOMEENV => "SOMEVALUE",
+#                           },
+#                           path: "scripts/vagrant_init_debian.sh",
+#                           privileged: false
+#        else
+#          $script = <<-SCRIPT
+#          Import-Module c:\\some_install_script.ps1
+#          install
+#          SCRIPT
+
+#          box.vm.provision "shell",
+#                           env: {
+#                               :SOMEENV => "SOMEVALUE",
+#                           },
+#                           inline: $script,
+#                           privileged: true
+#        end
+
+#      end
 
       box.vm.provider :virtualbox do |v|
         v.memory = 4096

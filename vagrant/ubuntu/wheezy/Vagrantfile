@@ -1,7 +1,7 @@
 machines = {
     :wheezy => {
         :box => 'debian/wheezy64',    # Debian 7, Needs glibc 2.17
-        :ip => '192.168.56.104',
+        :ip => '192.168.55.104',
     }
 }
 
