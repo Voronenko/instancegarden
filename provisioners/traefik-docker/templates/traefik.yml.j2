@@ -1,0 +1,81 @@
+# Traefik Static Configuration
+api:
+  dashboard: {{ traefik_enable_dashboard | default(false) | lower }}
+  insecure: {{ traefik_insecure_dashboard | default(false) | lower }}
+
+providers:
+  docker:
+    endpoint: "unix:///var/run/docker.sock"
+    exposedByDefault: false
+    network: {{ traefik_public_network | default('traefik-public') }}
+{% if traefik_dynamic_config | default(true) %}
+  file:
+    filename: /etc/traefik/dynamic.yml
+    watch: true
+{% endif %}
+
+entryPoints:
+  web:
+    address: ":{{ traefik_http_port | default(80) }}"
+{% if traefik_http_redirect | default(true) %}
+    http:
+      redirections:
+        entryPoint:
+          to: websecure
+          scheme: https
+          permanent: true
+{% endif %}
+
+  websecure:
+    address: ":{{ traefik_https_port | default(443) }}"
+    http:
+      middlewares:
+        - security-headers@file
+
+{% if traefik_enable_dashboard | default(false) %}
+  traefik:
+    address: ":{{ traefik_dashboard_port | default(8080) }}"
+{% endif %}
+
+certificatesResolvers:
+  {{ traefik_certresolver | default('letsencrypt') }}:
+    acme:
+      email: "{{ traefik_acme_email | default('git@voronenko.info') }}"
+      storage: "/etc/traefik/certs/acme.json"
+{% if traefik_acme_staging | default(false) %}
+      caServer: "https://acme-staging-v02.api.letsencrypt.org/directory"
+{% endif %}
+      httpChallenge:
+        entryPoint: "web"
+
+
+{% if traefik_enable_log | default(true) %}
+log:
+  level: "{{ traefik_log_level | default('INFO') }}"
+  format: "{{ traefik_log_format | default('json') }}"
+{% endif %}
+
+{% if traefik_enable_access_log | default(true) %}
+accessLog:
+  format: "{{ traefik_access_log_format | default('json') }}"
+  bufferingSize: {{ traefik_access_log_buffering | default(100) }}
+{% endif %}
+
+{% if traefik_enable_metrics | default(false) %}
+metrics:
+  prometheus:
+    addEntryPointsLabels: true
+    addServicesLabels: true
+    manualRouting: true
+{% endif %}
+
+ping:
+  entryPoint: "traefik"
+
+{% if traefik_enable_plugins | default(false) %}
+experimental:
+  plugins:
+    traefik-plugin-custom-headers:
+      moduleName: "github.com/your/module"
+      version: "v1.0.0"
+{% endif %}

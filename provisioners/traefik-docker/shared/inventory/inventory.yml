@@ -1,0 +1,16 @@
+---
+all: # keys must be unique, i.e. only one 'hosts' per group
+    hosts:
+        vagrant_local:
+            ansible_host: 192.168.56.124
+            ansible_user: vagrant
+    children:
+        branch_deploy:
+            hosts:
+                vagrant_local:
+        docker_box:
+            hosts:
+              vagrant_local:
+
+
+

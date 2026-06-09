@@ -1,0 +1,201 @@
+---
+# Test playbook to validate Traefik routing rule generation
+- hosts: localhost
+  gather_facts: no
+  connection: local
+
+  vars:
+    app_version: "test-branch"
+    base_domain: "fiks.im"
+    normalized_version: "{{ (app_version.replace('.','-'))[:45] }}"
+    app_domain: "{{ normalized_version }}.{{ base_domain }}"
+
+    # Test Case 1: Simple host list
+    traefik_hosts:
+      - "demo.fundone.ai"
+      - "alpha.fundone.ai"
+      - "novis.fundone.ai"
+    traefik_hostregexps: []
+    traefik_exclude_hosts: []
+
+  tasks:
+    - name: Test Case 1 - Simple host list
+      set_fact:
+        traefik_routing_rule: >-
+          {%- set hosts = (traefik_hosts + [app_domain]) | unique if traefik_hosts else [app_domain] -%}
+          {%- set host_rules = [] -%}
+          {%- for host in hosts -%}
+            {{ host_rules.append("Host(`" + host + "`)") or "" -}}
+          {%- endfor -%}
+          {%- set regexp_rules = [] -%}
+          {%- for regexp in (traefik_hostregexps | unique) -%}
+            {{ regexp_rules.append("HostRegexp(`" + regexp + "`)") or "" -}}
+          {%- endfor -%}
+          {%- set all_rules = host_rules + regexp_rules -%}
+          {%- set combined_rule = "||".join(all_rules) -%}
+          {%- if traefik_exclude_hosts -%}
+            {%- set exclude_rules = [] -%}
+            {%- for host in (traefik_exclude_hosts | unique) -%}
+              {{ exclude_rules.append("!Host(`" + host + "`)") or "" -}}
+            {%- endfor -%}
+            {%- if exclude_rules | length == 1 -%}
+              {{ "(" + combined_rule + ") && " + exclude_rules[0] -}}
+            {%- else -%}
+              {{ "(" + combined_rule + ") && (" + " && ".join(exclude_rules) + ")" -}}
+            {%- endif -%}
+          {%- else -%}
+            {{ combined_rule -}}
+          {%- endif %}
+
+    - name: Display Test Case 1 result
+      debug:
+        msg: "Test Case 1 - Simple host list: {{ traefik_routing_rule }}"
+
+    - name: Test Case 2 - Regex pattern
+      set_fact:
+        traefik_hosts: []
+        traefik_hostregexps:
+          - "^.+\\.fundone\\.ai$"
+        traefik_exclude_hosts: []
+        traefik_routing_rule: >-
+          {%- set hosts = (traefik_hosts + [app_domain]) | unique if traefik_hosts else [app_domain] -%}
+          {%- set host_rules = [] -%}
+          {%- for host in hosts -%}
+            {{ host_rules.append("Host(`" + host + "`)") or "" -}}
+          {%- endfor -%}
+          {%- set regexp_rules = [] -%}
+          {%- for regexp in (traefik_hostregexps | unique) -%}
+            {{ regexp_rules.append("HostRegexp(`" + regexp + "`)") or "" -}}
+          {%- endfor -%}
+          {%- set all_rules = host_rules + regexp_rules -%}
+          {%- set combined_rule = "||".join(all_rules) -%}
+          {%- if traefik_exclude_hosts -%}
+            {%- set exclude_rules = [] -%}
+            {%- for host in (traefik_exclude_hosts | unique) -%}
+              {{ exclude_rules.append("!Host(`" + host + "`)") or "" -}}
+            {%- endfor -%}
+            {%- if exclude_rules | length == 1 -%}
+              {{ "(" + combined_rule + ") && " + exclude_rules[0] -}}
+            {%- else -%}
+              {{ "(" + combined_rule + ") && (" + " && ".join(exclude_rules) + ")" -}}
+            {%- endif -%}
+          {%- else -%}
+            {{ combined_rule -}}
+          {%- endif %}
+
+    - name: Display Test Case 2 result
+      debug:
+        msg: "Test Case 2 - Regex pattern: {{ traefik_routing_rule }}"
+
+    - name: Test Case 3 - Combined with exclusions
+      set_fact:
+        traefik_hosts:
+          - "demo.fundone.ai"
+          - "alpha.fundone.ai"
+        traefik_hostregexps:
+          - "^.+\\.fundone\\.ai$"
+        traefik_exclude_hosts:
+          - "whoami.fundone.ai"
+          - "traefik.fundone.ai"
+        traefik_routing_rule: >-
+          {%- set hosts = (traefik_hosts + [app_domain]) | unique if traefik_hosts else [app_domain] -%}
+          {%- set host_rules = [] -%}
+          {%- for host in hosts -%}
+            {{ host_rules.append("Host(`" + host + "`)") or "" -}}
+          {%- endfor -%}
+          {%- set regexp_rules = [] -%}
+          {%- for regexp in (traefik_hostregexps | unique) -%}
+            {{ regexp_rules.append("HostRegexp(`" + regexp + "`)") or "" -}}
+          {%- endfor -%}
+          {%- set all_rules = host_rules + regexp_rules -%}
+          {%- set combined_rule = "||".join(all_rules) -%}
+          {%- if traefik_exclude_hosts -%}
+            {%- set exclude_rules = [] -%}
+            {%- for host in (traefik_exclude_hosts | unique) -%}
+              {{ exclude_rules.append("!Host(`" + host + "`)") or "" -}}
+            {%- endfor -%}
+            {%- if exclude_rules | length == 1 -%}
+              {{ "(" + combined_rule + ") && " + exclude_rules[0] -}}
+            {%- else -%}
+              {{ "(" + combined_rule + ") && (" + " && ".join(exclude_rules) + ")" -}}
+            {%- endif -%}
+          {%- else -%}
+            {{ combined_rule -}}
+          {%- endif %}
+
+    - name: Display Test Case 3 result
+      debug:
+        msg: "Test Case 3 - Combined with exclusions: {{ traefik_routing_rule }}"
+
+    - name: Test Case 4 - Empty configuration (backward compatible)
+      set_fact:
+        traefik_hosts: []
+        traefik_hostregexps: []
+        traefik_exclude_hosts: []
+        traefik_routing_rule: >-
+          {%- set hosts = (traefik_hosts + [app_domain]) | unique if traefik_hosts else [app_domain] -%}
+          {%- set host_rules = [] -%}
+          {%- for host in hosts -%}
+            {{ host_rules.append("Host(`" + host + "`)") or "" -}}
+          {%- endfor -%}
+          {%- set regexp_rules = [] -%}
+          {%- for regexp in (traefik_hostregexps | unique) -%}
+            {{ regexp_rules.append("HostRegexp(`" + regexp + "`)") or "" -}}
+          {%- endfor -%}
+          {%- set all_rules = host_rules + regexp_rules -%}
+          {%- set combined_rule = "||".join(all_rules) -%}
+          {%- if traefik_exclude_hosts -%}
+            {%- set exclude_rules = [] -%}
+            {%- for host in (traefik_exclude_hosts | unique) -%}
+              {{ exclude_rules.append("!Host(`" + host + "`)") or "" -}}
+            {%- endfor -%}
+            {%- if exclude_rules | length == 1 -%}
+              {{ "(" + combined_rule + ") && " + exclude_rules[0] -}}
+            {%- else -%}
+              {{ "(" + combined_rule + ") && (" + " && ".join(exclude_rules) + ")" -}}
+            {%- endif -%}
+          {%- else -%}
+            {{ combined_rule -}}
+          {%- endif %}
+
+    - name: Display Test Case 4 result
+      debug:
+        msg: "Test Case 4 - Empty configuration: {{ traefik_routing_rule }}"
+
+    - name: Test Case 5 - Duplicate host removal
+      set_fact:
+        traefik_hosts:
+          - "demo.fundone.ai"
+          - "alpha.fundone.ai"
+          - "test-branch.fundone.ai"  # Duplicate of app_domain
+        traefik_hostregexps: []
+        traefik_exclude_hosts: []
+        traefik_routing_rule: >-
+          {%- set hosts = (traefik_hosts + [app_domain]) | unique if traefik_hosts else [app_domain] -%}
+          {%- set host_rules = [] -%}
+          {%- for host in hosts -%}
+            {{ host_rules.append("Host(`" + host + "`)") or "" -}}
+          {%- endfor -%}
+          {%- set regexp_rules = [] -%}
+          {%- for regexp in (traefik_hostregexps | unique) -%}
+            {{ regexp_rules.append("HostRegexp(`" + regexp + "`)") or "" -}}
+          {%- endfor -%}
+          {%- set all_rules = host_rules + regexp_rules -%}
+          {%- set combined_rule = "||".join(all_rules) -%}
+          {%- if traefik_exclude_hosts -%}
+            {%- set exclude_rules = [] -%}
+            {%- for host in (traefik_exclude_hosts | unique) -%}
+              {{ exclude_rules.append("!Host(`" + host + "`)") or "" -}}
+            {%- endfor -%}
+            {%- if exclude_rules | length == 1 -%}
+              {{ "(" + combined_rule + ") && " + exclude_rules[0] -}}
+            {%- else -%}
+              {{ "(" + combined_rule + ") && (" + " && ".join(exclude_rules) + ")" -}}
+            {%- endif -%}
+          {%- else -%}
+            {{ combined_rule -}}
+          {%- endif %}
+
+    - name: Display Test Case 5 result
+      debug:
+        msg: "Test Case 5 - Duplicate host removal: {{ traefik_routing_rule }}"

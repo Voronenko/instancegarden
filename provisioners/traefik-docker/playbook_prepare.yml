@@ -1,0 +1,101 @@
+---
+- hosts: branch_deploy
+
+  vars:
+    # Deployment paths
+    deploy_base_dir: "{{ compose_pr_root_dir }}/{{ app_version }}"
+
+    # Domain configuration
+    base_domain: "{{ base_domain | default('vagrant.fiks.im') }}"
+    app_domain: "{{ normalized_version }}.{{ base_domain }}"
+
+    # Docker configuration
+    docker_install_compose: true
+    docker_users: ["{{ ansible_user_id }}"]
+
+    # Traefik configuration
+    traefik_insecure_route_suffix: "{{ traefik_insecure_route_suffix | default('') }}"
+
+    # Traefik routing configuration - hosts (exact matches)
+    traefik_hosts: "{{ traefik_hosts | default([]) }}"
+
+    # Traefik routing configuration - regex patterns
+    traefik_hostregexps: "{{ traefik_hostregexps | default([]) }}"
+
+    # Traefik routing configuration - hosts to exclude
+    traefik_exclude_hosts: "{{ traefik_exclude_hosts | default([]) }}"
+
+  vars_files:
+    - ./playbook_vars.yml
+    - ./traefik_vars.yml
+
+  pre_tasks:
+    - name: Generate Traefik routing rule
+      set_fact:
+        traefik_routing_rule: >-
+          {%- set hosts = (traefik_hosts + [app_domain]) | unique if traefik_hosts else [app_domain] -%}
+          {%- set host_rules = [] -%}
+          {%- for host in hosts -%}
+            {{ host_rules.append("Host(`" + host + "`)") or "" -}}
+          {%- endfor -%}
+          {%- set regexp_rules = [] -%}
+          {%- for regexp in (traefik_hostregexps | unique) -%}
+            {{ regexp_rules.append("HostRegexp(`" + regexp + "`)") or "" -}}
+          {%- endfor -%}
+          {%- set all_rules = host_rules + regexp_rules -%}
+          {%- set combined_rule = "||".join(all_rules) -%}
+          {%- if traefik_exclude_hosts -%}
+            {%- set exclude_rules = [] -%}
+            {%- for host in (traefik_exclude_hosts | unique) -%}
+              {{ exclude_rules.append("!Host(`" + host + "`)") or "" -}}
+            {%- endfor -%}
+            {%- if exclude_rules | length == 1 -%}
+              {{ "(" + combined_rule + ") && " + exclude_rules[0] -}}
+            {%- else -%}
+              {{ "(" + combined_rule + ") && (" + " && ".join(exclude_rules) + ")" -}}
+            {%- endif -%}
+          {%- else -%}
+            {{ combined_rule -}}
+          {%- endif %}
+
+    - name: Debug generated Traefik rule
+      debug:
+        msg: "Generated Traefik rule: {{ traefik_routing_rule }}"
+
+    - name: Install Docker and Docker Compose
+      include_role:
+        name: softasap.sa_docker
+      vars:
+        docker_install_docker: true
+        docker_install_compose: true
+        docker_users: ["{{ ansible_user_id }}"]
+        docker_daemon_options:
+          log-driver: "json-file"
+          log-opts:
+            max-size: "10m"
+            max-file: "3"
+
+  tasks:
+    - include_tasks: components/traefik.yml
+
+  post_tasks:
+    - name: Traefik | Display dashboard access information
+      debug:
+        msg:
+          - "======================================================================"
+          - "  🚀 Traefik Dashboard is ready!"
+          - "======================================================================"
+          - "  Dashboard URL: http://{{ traefik_dashboard_domain | default('traefik.' + base_domain | default('vagrant.fiks.im')) }}:{{ traefik_dashboard_port | default(8080) }}"
+          - "  Whoami test:   http://{{ traefik_whoami_domain | default('whoami.' + base_domain | default('vagrant.fiks.im')) }}"
+          - "  Dockhand (Docker UI): http://{{ traefik_dockhand_domain | default('docker.' + base_domain | default('vagrant.fiks.im')) }}"
+          - "======================================================================"
+          - "  Environment: {{ APP_ENVIRONMENT | default('default') }}"
+          - "  App version: {{ APP_BRANCH | default('develop') }}"
+          - "======================================================================"
+          - ""
+          - "  📋 Certificate management:"
+          - "    cd {{ traefik_deploy_base_dir | default('/home/' + ansible_user_id + '/apps/traefik') }}"
+          - "    make update-certs  # Download latest certificates"
+          - "    make reload-certs  # Update and restart Traefik"
+          - "======================================================================"
+

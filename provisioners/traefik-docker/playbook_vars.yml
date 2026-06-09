@@ -1,0 +1,27 @@
+---
+compose_pr_root_dir: "/home/{{ ansible_user_id }}/compose-branch"
+
+# Base deployment paths
+deploy_base_dir: "{{ compose_pr_root_dir }}/{{ app_version }}"
+
+# Domain configuration
+base_domain: "vagrant.fiks.im"
+app_domain: "{{ (app_version.replace('.', '-'))[:45] + '.' + base_domain }}"
+
+# Docker configuration
+docker_install_compose: true
+docker_users: ["{{ ansible_user_id }}"]
+
+# Traefik routing configuration (staging)
+# traefik_hosts: List of exact hostnames to match
+# traefik_hostregexps: List of regex patterns for dynamic subdomain matching
+# traefik_exclude_hosts: List of hostnames to exclude from matching
+traefik_hosts: []
+
+traefik_hostregexps: []
+#  - "^.+\\.fundone\\.ai$"
+
+traefik_exclude_hosts: []
+#  - "whoami.fundone.ai"
+#  - "traefik.fundone.ai"
+

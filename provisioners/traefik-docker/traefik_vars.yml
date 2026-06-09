@@ -1,0 +1,45 @@
+# Traefik configuration
+traefik_version: "v3.6.2"
+traefik_deploy_base_dir: "/home/{{ansible_user_id}}/apps/traefik"
+traefik_config_dir: "{{ deploy_base_dir }}/traefik"
+traefik_public_network: "traefik-public"
+traefik_enable_dashboard: true
+traefik_enable_api: true
+traefik_insecure_dashboard: false
+traefik_http_port: 80
+traefik_https_port: 443
+traefik_dashboard_port: 8080
+
+# Domain configuration for Traefik services
+traefik_dashboard_domain: "traefik.{{ base_domain }}"
+traefik_whoami_domain: "whoami.{{ base_domain }}"
+traefik_dockhand_domain: "docker.{{ base_domain }}"
+traefik_dockhand_port: 3000
+
+# Traefik service versions
+traefik_whoami_version: "v1.8.0"
+traefik_dockhand_version: "latest"
+
+# Certificate configuration
+traefik_certresolver: "letsencrypt"
+traefik_acme_email: "admin@{{ base_domain }}"
+traefik_acme_staging: false
+
+# Security configuration
+traefik_http_redirect: true
+traefik_auth_enabled: false
+# traefik_auth_user: "admin"
+# traefik_auth_password: "hashed_password"
+
+# Logging configuration
+traefik_enable_log: true
+traefik_log_level: "INFO"
+traefik_log_format: "json"
+traefik_enable_access_log: true
+traefik_access_log_format: "json"
+traefik_access_log_buffering: 100
+
+## Advanced configuration
+#traefik_dynamic_config: true
+#traefik_enable_metrics: false
+#traefik_fallback_service: "httpstat.us/404"

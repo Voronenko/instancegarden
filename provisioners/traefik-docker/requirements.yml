@@ -1,0 +1,6 @@
+---
+# Requirements file for Ansible Galaxy roles
+# Focus on softasa.sa-docker role for Docker installation and management
+
+- name: softasap.sa_docker
+  version: 1.9.0

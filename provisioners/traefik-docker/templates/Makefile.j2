@@ -1,0 +1,36 @@
+.PHONY: help update-certs restart traefik-logs
+
+# Default target
+help:
+	@echo "Available targets:"
+	@echo "  make update-certs  - Download latest certificates from GitHub"
+	@echo "  make restart       - Restart Traefik containers"
+	@echo "  make traefik-logs  - Show Traefik logs"
+
+# Update certificates from GitHub releases
+update-certs:
+	@echo "Fetching latest release version from GitHub..."
+	@LATEST_TAG=$$(curl -s https://api.github.com/repos/Voronenko/fiks.im/releases/latest | grep '"tag_name"' | cut -d '"' -f 4) && \
+	echo "Downloading certificates for version: $$LATEST_TAG" && \
+	curl -sLo ./traefik_certs/fiksim_privkey.pem https://github.com/Voronenko/fiks.im/releases/download/$$LATEST_TAG/fiksim_privkey.pem && \
+	curl -sLo ./traefik_certs/fiksim_cert.pem https://github.com/Voronenko/fiks.im/releases/download/$$LATEST_TAG/fiksim_cert.pem && \
+	curl -sLo ./traefik_certs/fiksim_fullchain.pem https://github.com/Voronenko/fiks.im/releases/download/$$LATEST_TAG/fiksim_fullchain.pem && \
+	chmod 600 ./traefik_certs/fiksim_*.pem && \
+	touch ./traefik_conf/certificates.toml && \
+	echo "✓ Certificates updated successfully" && \
+	echo "  - ./traefik_certs/fiksim_privkey.pem" && \
+	echo "  - ./traefik_certs/fiksim_cert.pem" && \
+	echo "  - ./traefik_certs/fiksim_fullchain.pem" && \
+	echo "  Certificate files: $$(ls -la ./traefik_certs/fiksim_*.pem 2>/dev/null | wc -l)"
+
+# Restart Traefik containers
+restart:
+	docker-compose -f compose.yml restart
+
+# Show Traefik logs
+traefik-logs:
+	docker-compose -f compose.yml logs -f traefik
+
+# Reload Traefik configuration (triggered by certificate update)
+reload-certs: update-certs restart
+	@echo "✓ Certificates reloaded"

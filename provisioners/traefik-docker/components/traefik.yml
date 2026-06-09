@@ -1,0 +1,172 @@
+---
+
+  - name: Traefik | Deploy information
+    debug:
+      msg: "Setting up Traefik infrastructure v{{ traefik_version | default('2.11.31') }} for {{ app_domain }}"
+
+  - name: Traefik | Ensure Docker is running
+    service:
+      name: docker
+      state: started
+    become: true
+
+  - name: Traefik | Create Docker networks
+    docker_network:
+      name: "{{ item }}"
+      state: present
+      driver: bridge
+    with_items:
+      - "{{ traefik_public_network | default('traefik-public') }}"
+    become: true
+
+  - name: Traefik | Setup directory structure
+    file:
+      path: "{{ item }}"
+      state: directory
+      mode: '0755'
+    with_items:
+      - "{{ traefik_deploy_base_dir }}"
+      - "{{ traefik_deploy_base_dir }}/traefik_conf"
+      - "{{ traefik_deploy_base_dir }}/traefik_certs"
+
+  - name: Traefik | Create empty acme.json file for Let's Encrypt certificates
+    file:
+      path: "{{ traefik_deploy_base_dir }}/traefik_certs/acme.json"
+      state: touch
+      mode: '0600'
+    register: acme_file
+
+  - name: Traefik | Set proper permissions on acme.json
+    file:
+      path: "{{ traefik_deploy_base_dir }}/traefik_certs/acme.json"
+      mode: '0600'
+    when: acme_file.changed
+
+  - name: Traefik | Fetch latest release version from GitHub
+    uri:
+      url: https://api.github.com/repos/Voronenko/fiks.im/releases/latest
+      return_content: true
+    register: github_release
+    when: traefik_download_fiksim_certs | default(true)
+
+  - name: Traefik | Extract tag name from release
+    set_fact:
+      traefik_cert_version: "{{ github_release.json.tag_name | regex_replace('^v', '') }}"
+    when:
+      - traefik_download_fiksim_certs | default(true)
+      - github_release.json is defined
+
+  - name: Traefik | Download certificate files from GitHub release
+    get_url:
+      url: "https://github.com/Voronenko/fiks.im/releases/download/{{ github_release.json.tag_name }}/{{ item.file }}"
+      dest: "{{ traefik_deploy_base_dir }}/traefik_certs/{{ item.file }}"
+      mode: '0600'
+      force: true
+    loop:
+      - { file: "fiksim_privkey.pem" }
+      - { file: "fiksim_cert.pem" }
+      - { file: "fiksim_fullchain.pem" }
+    when:
+      - traefik_download_fiksim_certs | default(true)
+      - github_release.json is defined
+    register: cert_download
+
+  - name: Traefik | Display downloaded certificate info
+    debug:
+      msg:
+        - "Downloaded certificates for version {{ traefik_cert_version | default('unknown') }}"
+        - "Files: {{ cert_download.results | selectattr('dest', 'defined') | map(attribute='dest') | list }}"
+    when:
+      - traefik_download_fiksim_certs | default(true)
+      - cert_download.results is defined
+
+  - name: Traefik | Add ansible user to docker group for socket access
+    user:
+      name: "{{ ansible_user }}"
+      groups: docker
+      append: true
+    become: true
+
+  - name: Traefik | Create Traefik configuration file
+    template:
+      src: "templates/traefik.yml.j2"
+      dest: "{{ traefik_deploy_base_dir }}/traefik_conf/traefik.yml"
+      mode: '0644'
+
+  - name: Traefik | Create Makefile for certificate management
+    template:
+      src: "templates/Makefile.j2"
+      dest: "{{ traefik_deploy_base_dir }}/Makefile"
+      mode: '0755'
+
+  - name: Traefik | Create dynamic configuration file for middleware
+    template:
+      src: "templates/traefik-dynamic.yml.j2"
+      dest: "{{ traefik_deploy_base_dir }}/traefik_conf/dynamic.yml"
+      mode: '0644'
+    when: traefik_dynamic_config | default(true)
+
+  - name: Traefik | template docker-compose for Traefik infrastructure
+    template:
+      src: "templates/docker-compose-traefik.yml.j2"
+      dest: "{{ traefik_deploy_base_dir }}/compose.yml"
+      mode: '0644'
+
+  - name: Traefik | Stop existing Traefik infrastructure before introducing changes
+    shell: docker-compose -f compose.yml down
+    args:
+      chdir: "{{ traefik_deploy_base_dir }}"
+    ignore_errors: yes
+    become: true
+
+  - name: Traefik | Pull Traefik infrastructure images
+    shell: docker-compose -f compose.yml pull
+    args:
+      chdir: "{{ traefik_deploy_base_dir }}/"
+    become: true
+
+  - name: Traefik | Deploy Traefik infrastructure
+    shell: docker-compose -f compose.yml up -d --remove-orphans
+    args:
+      chdir: "{{ traefik_deploy_base_dir }}/"
+    become: true
+
+  - name: Traefik | Wait for Traefik to be healthy
+    shell: docker-compose ps --services --filter "status=running"
+    args:
+      chdir: "{{ traefik_deploy_base_dir }}"
+    register: traefik_services
+    retries: 10
+    delay: 10
+    until: traefik_services.stdout | default('') | length > 0
+    become: true
+
+  - name: Traefik | Wait for health checks to pass
+    shell: docker-compose ps --format "table {{ '{{ .Service }}' }}\t{{ '{{ .Status }}' }}"
+    args:
+      chdir: "{{ traefik_deploy_base_dir }}"
+    register: traefik_health_status
+    retries: 15
+    delay: 15
+    until: "'healthy' in traefik_health_status.stdout"
+    become: true
+
+  - name: Traefik | Display Traefik endpoints information
+    debug:
+      msg:
+        - "Traefik Dashboard: http://{{ traefik_dashboard_domain | default('traefik.' + app_domain) }}:{{ traefik_dashboard_port | default(8080) }}"
+        - "Whoami test service: http://{{ traefik_whoami_domain | default('whoami.' + app_domain) }}"
+        - "Dockhand (Docker UI): http://{{ traefik_dockhand_domain | default('docker.' + app_domain) }}"
+        - "Docker network '{{ traefik_public_network | default('traefik-public') }}' is ready for application services"
+        - ""
+        - "Certificate management available via Makefile:"
+        - "  cd {{ traefik_deploy_base_dir }}"
+        - "  make update-certs  # Download latest certificates"
+        - "  make reload-certs  # Update and restart Traefik"
+        - "  make help          # Show all available commands"
+
+  - name: Traefik | Cleanup unused Docker resources
+    shell: docker system prune -f
+    args:
+      chdir: "{{ traefik_deploy_base_dir }}/"
+    become: true

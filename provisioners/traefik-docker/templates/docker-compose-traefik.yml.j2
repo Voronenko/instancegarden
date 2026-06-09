@@ -1,0 +1,108 @@
+services:
+  traefik:
+    image: traefik:{{ traefik_version | default('v3.6.2') }}
+    container_name: traefik
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - {{ traefik_public_network | default('traefik-public') }}
+    ports:
+      - "{{ traefik_http_port | default(80) }}:80"
+      - "{{ traefik_https_port | default(443) }}:443"
+{% if traefik_enable_dashboard | default(false) %}
+      - "{{ traefik_dashboard_port | default('8080') }}:8080"
+{% endif %}
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./traefik_conf/traefik.yml:/etc/traefik/traefik.yml:ro"
+      - "./traefik_conf/dynamic.yml:/etc/traefik/dynamic.yml:ro"
+      - "./traefik_certs:/etc/traefik/certs"
+    environment:
+      TRAEFIK_CERTIFICATESRESOLVERS_LE_ACME_EMAIL: "{{ traefik_acme_email | default('admin@' + app_domain) }}"
+      TRAEFIK_CERTIFICATESRESOLVERS_LE_ACME_STORAGE: "/etc/traefik/certs/acme.json"
+{% if traefik_enable_dashboard | default(false) %}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.traefik.rule=Host(`{{ traefik_dashboard_domain | default('traefik.' + app_domain) }}`)"
+      - "traefik.http.routers.traefik.entrypoints=websecure"
+      # Use static defaultCertificate (fiksim wildcard) — works offline/internal
+      - "traefik.http.routers.traefik.tls=true"
+      # Use Let's Encrypt instead — requires public DNS (HTTP challenge must succeed)
+      # - "traefik.http.routers.traefik.tls.certresolver={{ traefik_certresolver | default('letsencrypt') }}"
+      - "traefik.http.routers.traefik.service=api@internal"
+      - "traefik.http.services.traefik.loadbalancer.server.port=888"
+{% else %}
+    labels:
+      - "traefik.enable=true"
+{% endif %}
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:8080/ping || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  whoami:
+    image: traefik/whoami:{{ traefik_whoami_version | default('v1.8.0') }}
+    container_name: whoami
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - {{ traefik_public_network | default('traefik-public') }}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.whoami.rule=Host(`{{ traefik_whoami_domain | default('whoami.' + app_domain) }}`)"
+      - "traefik.http.routers.whoami.entrypoints=websecure"
+      - "traefik.http.routers.whoami.tls=true"
+      # Option 1: Use Let's Encrypt (will fallback to static certs if LE fails)
+      - "traefik.http.routers.whoami.tls.certresolver={{ traefik_certresolver | default('letsencrypt') }}"
+      # Option 2: Use static certificates only (uncomment below and comment above)
+      # - "traefik.http.routers.whoami.tls=true"
+      - "traefik.http.routers.whoami_http.rule=Host(`{{ traefik_whoami_domain | default('whoami.' + app_domain) }}`)"
+      - "traefik.http.routers.whoami_http.entrypoints=web"
+      - "traefik.http.routers.whoami_http.middlewares=https-redirect"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.scheme=https"
+      - "traefik.http.middlewares.https-redirect.redirectscheme.permanent=true"
+      - "traefik.http.services.whoami.loadbalancer.server.port=80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:80 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  dockhand:
+    image: fnsys/dockhand:{{ traefik_dockhand_version | default('latest') }}
+    container_name: dockhand
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    networks:
+      - {{ traefik_public_network | default('traefik-public') }}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - dockhand_data:/app/data
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.services.dockhand-secure.loadbalancer.server.port={{ traefik_dockhand_port | default(3000) }}"
+      - "traefik.http.routers.dockhand.rule=Host(`{{ traefik_dockhand_domain | default('docker.' + app_domain) }}`)"
+      - "traefik.http.routers.dockhand.entrypoints=web"
+      - "traefik.http.routers.dockhand-secure.rule=Host(`{{ traefik_dockhand_domain | default('docker.' + app_domain) }}`)"
+      - "traefik.http.routers.dockhand-secure.entrypoints=websecure"
+      - "traefik.http.routers.dockhand-secure.tls=true"
+      - "traefik.http.routers.dockhand-secure.tls.certresolver={{ traefik_certresolver | default('letsencrypt') }}"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:{{ traefik_dockhand_port | default(3000) }}/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+volumes:
+  dockhand_data:
+
+networks:
+  {{ traefik_public_network | default('traefik-public') }}:
+    external: true
