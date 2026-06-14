@@ -40,7 +40,6 @@
     file:
       path: "{{ traefik_deploy_base_dir }}/traefik_certs/acme.json"
       mode: '0600'
-    when: acme_file.changed
 
   - name: Traefik | Fetch latest release version from GitHub
     uri:

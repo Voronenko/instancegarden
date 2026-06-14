@@ -1,6 +1,14 @@
 # Traefik Dynamic Configuration
 http:
   middlewares:
+    # Global HTTPS redirect middleware - excludes ACME challenges
+    global-https-redirect:
+      redirectScheme:
+        scheme: https
+        permanent: true
+      # Only redirect if not ACME challenge path
+      # This is handled by the acme-global router having higher priority
+
     # Security headers middleware
     security-headers:
       headers:
@@ -15,7 +23,7 @@ http:
         customRequestHeaders:
           X-Forwarded-Proto: "https"
 
-    # HTTPS redirect middleware
+    # HTTPS redirect middleware (for specific routers)
     https-redirect:
       redirectScheme:
         scheme: https
@@ -39,12 +47,10 @@ http:
 {#    catch-all:#}
 {#      rule: "HostRegexp(`{catchall:.*}`)"#}
 {#      entrypoints:#}
-{#        - websecure#}
-{#      service: "fallback@internal"#}
+@ provisioners/traefik-docker/templates/traefik-dynamic.yml.j2:54 @ http:
 {#      priority: 1#}
 
   # Fallback service
-{#  services:#}
 {#    fallback:#}
 {#      loadBalancer:#}
 {#        servers:#}

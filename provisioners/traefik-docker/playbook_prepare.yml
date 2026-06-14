@@ -6,7 +6,7 @@
     deploy_base_dir: "{{ compose_pr_root_dir }}/{{ app_version }}"
 
     # Domain configuration
-    base_domain: "{{ base_domain | default('vagrant.fiks.im') }}"
+    base_domain: "{{ base_domain_override | default('vagrant.fiks.im') }}"
     app_domain: "{{ normalized_version }}.{{ base_domain }}"
 
     # Docker configuration
@@ -30,6 +30,18 @@
     - ./traefik_vars.yml
 
   pre_tasks:
+    - name: Debug base_domain_override
+      debug:
+        msg: "base_domain_override={{ base_domain_override | default('UNDEFINED') }} is defined={{ base_domain_override is defined }}"
+
+    - name: Debug base_domain (before override logic)
+      debug:
+        msg: "base_domain from vars_files={{ base_domain }}"
+
+    - name: Debug final base_domain
+      debug:
+        msg: "Final base_domain={{ base_domain }}"
+
     - name: Generate Traefik routing rule
       set_fact:
         traefik_routing_rule: >-
@@ -66,14 +78,8 @@
       include_role:
         name: softasap.sa_docker
       vars:
-        docker_install_docker: true
-        docker_install_compose: true
-        docker_users: ["{{ ansible_user_id }}"]
-        docker_daemon_options:
-          log-driver: "json-file"
-          log-opts:
-            max-size: "10m"
-            max-file: "3"
+        option_install_docker_compose: true
+      #when: 1==2
 
   tasks:
     - include_tasks: components/traefik.yml

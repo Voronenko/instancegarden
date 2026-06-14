@@ -24,6 +24,9 @@ entryPoints:
           to: websecure
           scheme: https
           permanent: true
+      # Global middleware to redirect HTTP to HTTPS, but exclude ACME challenges
+      middlewares:
+        - global-https-redirect@file
 {% endif %}
 
   websecure:

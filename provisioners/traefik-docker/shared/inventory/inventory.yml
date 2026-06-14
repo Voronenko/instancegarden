@@ -4,13 +4,20 @@ all: # keys must be unique, i.e. only one 'hosts' per group
         vagrant_local:
             ansible_host: 192.168.56.124
             ansible_user: vagrant
+        aws_branch_deploy:
+            ansible_host: 127.0.0.1
+            ansible_user: ubuntu
+            base_domain_override: "preview.fiks.im"
+            traefik_use_letsencrypt_resolver: true
     children:
         branch_deploy:
             hosts:
                 vagrant_local:
+                aws_branch_deploy:
         docker_box:
             hosts:
               vagrant_local:
+              aws_branch_deploy:
 
 
 

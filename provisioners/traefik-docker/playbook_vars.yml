@@ -1,11 +1,14 @@
 ---
 compose_pr_root_dir: "/home/{{ ansible_user_id }}/compose-branch"
 
+aws_region: "us-east-1"
+aws_account_id: "00000000"
+
 # Base deployment paths
 deploy_base_dir: "{{ compose_pr_root_dir }}/{{ app_version }}"
 
 # Domain configuration
-base_domain: "vagrant.fiks.im"
+# base_domain is defined in playbook_prepare.yml vars: with override support
 app_domain: "{{ (app_version.replace('.', '-'))[:45] + '.' + base_domain }}"
 
 # Docker configuration

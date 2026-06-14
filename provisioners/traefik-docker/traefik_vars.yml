@@ -21,12 +21,13 @@ traefik_whoami_version: "v1.8.0"
 traefik_dockhand_version: "latest"
 
 # Certificate configuration
+traefik_use_letsencrypt_resolver: false  # true = use Let's Encrypt, false = use static fiksim wildcard
 traefik_certresolver: "letsencrypt"
 traefik_acme_email: "admin@{{ base_domain }}"
 traefik_acme_staging: false
 
 # Security configuration
-traefik_http_redirect: true
+traefik_http_redirect: false  # Disable global redirect — breaks Let's Encrypt HTTP challenge. Use per-router https-redirect middleware instead.
 traefik_auth_enabled: false
 # traefik_auth_user: "admin"
 # traefik_auth_password: "hashed_password"

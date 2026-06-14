@@ -1,5 +1,20 @@
 #!/bin/bash
 
+# Parse arguments
+BOX_LIMIT=""
+while [[ $# -gt 0 ]]; do
+  case $1 in
+    --limit)
+      BOX_LIMIT="$2"
+      shift 2
+      ;;
+    *)
+      BOX_ADDRESS=${1:-$REMOTE_HOST}
+      shift
+      ;;
+  esac
+done
+
 # Static parameters
 WORKSPACE=$(
   cd $(dirname "$0")
@@ -8,7 +23,7 @@ WORKSPACE=$(
 REMOTE_HOST=${REMOTE_HOST:-$PWD/shared/inventory/inventory.yml}
 BOX_PLAYBOOK=$WORKSPACE/playbook_prepare.yml
 BOX_NAME=${BOX_NAME:-unnamed_oops_box}
-BOX_ADDRESS=${1:-$REMOTE_HOST}
+BOX_ADDRESS=${BOX_ADDRESS:-$REMOTE_HOST}
 BOX_USER=${BOX_DEPLOY_USER:-ubuntu}
 BOX_PWD=$BOX_DEPLOY_PASS
 BOX_PROVIDER=${BOX_PROVIDER:-}
@@ -68,6 +83,7 @@ echo "Deploying app_version=${APP_BRANCH:-master} for env=${APP_ENVIRONMENT} usi
 LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 ansible-playbook $BOX_PLAYBOOK \
 -v \
 -i $BOX_INVENTORY \
+${BOX_LIMIT:+--limit "$BOX_LIMIT"} \
 -e box_address="${BOX_ADDRESS}" \
 -e box_provider=$BOX_PROVIDER \
 -e app_version="${APP_BRANCH:-develop}" \
